@@ -1,0 +1,24 @@
+- 取り組んだレベル：発展
+
+- やったこと：
+  普段 GitHub Codespaces で使っている VS Code を選び、MCP サーバーの設定方法を公式ドキュメントで調べて、演習の app/mcp_servers.json と比べた。
+
+- 結果：
+
+  | 調べること | 演習（app/mcp_servers.json） | VS Code |
+  |---|---|---|
+  | 設定を書く場所 | リポジトリの app/mcp_servers.json | プロジェクト用はワークスペース直下の .mcp.json、全体用は ~/.copilot/mcp-config.json。古い形式として .vscode/mcp.json とユーザープロファイルの mcp.json もある（非推奨だが利用可）。コマンドパレットの「MCP: Add Server」や、`code --add-mcp` コマンドでも追加できる |
+  | 一番外側のキー | "mcpServers" | .mcp.json などは "mcpServers"（演習と同じ）。.vscode/mcp.json など VS Code 独自の形式は "servers" |
+  | コマンドで起動する書き方 | "command": "uv"、"args": ["run", "python", "-m", "app.mcp_server"] | "type": "stdio" を付けたうえで、"command" と "args" を書く。"env" で環境変数も渡せる |
+  | URL で接続する書き方 | "url": "https://knowledge-mcp.global.api.aws" | "type": "http"（Streamable HTTP）と "url" を書く。古いサーバーには "type": "sse"。"headers" で認証情報を渡せるが、値は ${NAME} の形で環境変数から読むように書く |
+  | 有効になる範囲 | このリポジトリのエージェント（app.mcp_agent）だけ | .mcp.json はそのプロジェクトだけで、チームで共有できる。~/.copilot/mcp-config.json は自分のすべてのワークスペース |
+
+  演習の glossary サーバーを VS Code の .mcp.json に書くなら、次のようになると考えられる（"type": "stdio" を足す以外は演習と同じ）。
+  {"mcpServers": {"glossary": {"type": "stdio", "command": "uv", "args": ["run", "python", "-m", "app.mcp_server"]}}}
+
+- 気づき・疑問：
+  - 演習の設定ファイルは、VS Code の .mcp.json と同じ "mcpServers" 形式だった。サーバー名・command・args・url という基本の形が共通なので、一度書き方を覚えれば、別のソフトウェアにもほぼそのまま持っていけると分かった。これが、MCP が「共通の差し込み口」と呼ばれる理由だと実感した。
+  - 違いは、VS Code では "type" で stdio か http かを明示すること。演習では command があるか url があるかで、自動的に判断していた。
+  - VS Code の中にも "mcpServers" と "servers" の2つの形式があり、ドキュメントでも「確認せずに書き写さないように」と注意されていた。同じソフトウェアの中でも設定方法が変わっていくので、調べた日付と URL を残す意味がよく分かった。
+  - URL で接続する場合、パスワードなどの認証情報を設定ファイルに直接書かず、環境変数から読む書き方が勧められていた。設定ファイルを GitHub で共有するときに漏れないようにするためだと思う。
+  - 疑問：Codespaces のような遠隔の環境では、自分の PC の ~/.copilot/mcp-config.json は引き継がれないとドキュメントにあった。Codespaces で毎回使いたいサーバーは、リポジトリの .mcp.json に書くのがよいのか。
